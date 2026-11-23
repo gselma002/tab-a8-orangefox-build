@@ -24,6 +24,12 @@ Always refresh repository and PR state before relying on historical descriptions
 
 ## Decisions and rationale
 
+## History coverage and confidence
+
+This is a decision-oriented synthesis, not a complete transcript export. It was assembled from the project context and available conversation summaries. Some older chats may be unavailable in full, and commands mentioned without their original output cannot be promoted to verified evidence. Where a decision is supported only by a summary, retain that limitation. Do not invent dates, command results, user approvals, or exact implementation history.
+
+When a newly moved conversation provides original evidence, reconcile it with this record. If it conflicts with current repository source or a newer reproducible device observation, record the conflict and resolve it explicitly rather than silently overwriting the old account.
+
 ### Android-first, same-device architecture
 
 The tablet is the primary execution target. A cloud or hosted workflow may be investigated only as optional support; it must not be represented as local execution or become a required dependency.
