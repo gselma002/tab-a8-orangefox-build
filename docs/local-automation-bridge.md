@@ -75,7 +75,7 @@ A remembered approval may cover only a narrowly defined repeatable Class A task.
 
 A request is a versioned structured object containing a unique request ID and expiry, a registered operation ID, typed parameters with strict limits, requested output fields, and (where applicable) an expected repository URL and immutable commit ID.
 
-The broker responds with a job ID and a state from:
+The broker must resolve workspace and artifact IDs against app-owned registries; syntactically valid IDs alone do not authorize access. It must atomically reject duplicate request IDs and persist the accepted request before scheduling work. The pure B0 validator does not implement either registry lookup or replay protection. The broker responds with a job ID and a state from:
 - RECEIVED
 - VALIDATING
 - AWAITING_APPROVAL
@@ -111,7 +111,7 @@ Terminal records include exit code, start/end timestamps, handler version, outpu
 ## Implementation stages and gates
 
 ### B0 — threat model and protocol
-Define the operation registry, schema, state machine, risk classes, redaction rules, and threat model. Add tests for malformed/expired/replayed requests, invalid transitions, output limits, and secret redaction. No command execution yet.
+Define the operation registry, schema, state machine, risk classes, redaction rules, and threat model. Add tests for malformed/expired requests, invalid transitions, output limits, and secret redaction. The current pure validator checks workspace/artifact identifier syntax and request expiry, but it does not prove that an ID exists in a local registry and does not prevent request-ID replay. Those checks require the persistent broker in B1. No command execution yet.
 
 ### B1 — local read-only broker
 Implement device/tool inventory and job status only. No Termux integration, network listener, root, or Shizuku. Demonstrate on SM-X200 and inspect Android permissions/exported components.
