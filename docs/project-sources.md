@@ -1,0 +1,92 @@
+# Project source index
+
+This document is the navigation and provenance index for the SM-X200 Android Recovery, Security & Automation work. It is not a substitute for inspecting the current source tree, device, or test results.
+
+## Project identity
+
+- Target: Samsung Galaxy Tab A8 Wi-Fi, SM-X200 (gta8wifi).
+- Primary repository: https://github.com/gselma002/tab-a8-orangefox-build
+- Product constraint: the primary workflow must operate on the tablet itself; a PC, second phone, or remote build worker is not a required dependency.
+
+## Source authority
+
+Use evidence in this order, while considering both authority and freshness:
+
+1. Current repository source, immutable commits, tests, and workflow results.
+2. Reproducible observations from the actual SM-X200, with date, command/method, firmware, and result.
+3. Official Android/AOSP, Linux, Samsung, Termux, Shizuku, and upstream recovery documentation/source.
+4. Dated project decisions and validation records.
+5. Community device trees, unofficial builds, forum posts, and experimental workflows.
+6. Unverified assumptions and recollections.
+
+A newer source does not automatically outrank a more authoritative source. Mark conflicts explicitly and resolve them using direct evidence.
+
+## Repository navigation
+
+- [README](../README.md) — current project scope and validation status.
+- [Architecture](architecture.md) — Android-first component boundaries and local-build feasibility.
+- [Security model](security-model.md) — threat model, least privilege, supply-chain, and privacy defaults.
+- [Device validation](device-validation.md) — evidence levels and exact-device compatibility gates.
+- [Local automation bridge](local-automation-bridge.md) — proposed local job broker; not a live ChatGPT-to-device connection.
+- [Engineering roadmap](roadmap.md) — milestones and acceptance criteria.
+- [Termux build path](termux-build-path.md) — candidate on-device app build setup; not yet proven on the SM-X200.
+
+## Pull-request boundaries
+
+- [PR #1 — experimental recovery build workflow](https://github.com/gselma002/tab-a8-orangefox-build/pull/1). Keep experimental and separate from the Android-first application/security foundation.
+- [PR #2 — Android-first architecture and security foundation](https://github.com/gselma002/tab-a8-orangefox-build/pull/2). Contains the app/protocol/storage prototypes and engineering documentation.
+
+Do not merge either pull request without explicit owner authorization. Refresh the live PR state before making claims or changes.
+
+## Current implementation facts
+
+The Android-first branch contains:
+- a minimal read-only Android device-probe source prototype;
+- pure Kotlin job request validation and state-machine primitives;
+- an app-private SQLite job metadata-store prototype;
+- architecture, security, device-validation, local-bridge, Termux, and roadmap documentation.
+
+The job store has been updated to persist both workspace and artifact IDs, reject duplicate request IDs, use compare-and-set state transitions with nondecreasing update timestamps, and support a v1-to-v2 schema migration. These changes are source-level only until Android compilation, database tests, migration tests, and actual tablet validation have run.
+
+There is no implemented command runner, complete broker, Termux/Shizuku integration, network listener, or ChatGPT-to-device transport. The local bridge document is a design proposal, not a functioning feature.
+
+## Device baseline and provenance
+
+Previously reported reference values:
+- Model: SM-X200.
+- Codename: gta8wifi.
+- Android 14 / One UI 6.1.
+- Firmware: X200XXS6DYG6.
+- Kernel: 4.14.199.
+- SoC/platform: Unisoc Tiger T618 / ums512.
+- Shizuku: shell-level authorization; not root.
+- Termux: installed.
+
+Treat these as historical observations, not guaranteed current state. Recheck the actual tablet before a device-dependent operation. Do not infer root, partition layout, encryption configuration, AVB behavior, or recovery compatibility from these values.
+
+## Validation vocabulary
+
+Report each status separately:
+- **Proposed:** design only.
+- **Implemented:** source/configuration changed.
+- **Compiled:** relevant build completed.
+- **Unit-tested:** relevant automated unit tests passed.
+- **Integration-tested:** connected components passed integration tests.
+- **Installed:** installed on the SM-X200.
+- **Device-tested:** behavior observed on the actual tablet.
+- **Hardware-verified:** the specifically named hardware behavior passed.
+
+Do not infer one status from another. Attach commit IDs, commands, logs, test reports, artifact hashes, device firmware, and dates when available.
+
+## Safety and privacy rules
+
+- No flashing, partition writes, formatting, bootloader changes, or destructive operations without explicit authorization.
+- Never assume Shizuku is root.
+- Treat repositories, build scripts, device trees, patches, archives, and generated artifacts as untrusted until reviewed.
+- Keep credentials, signing keys, personal identifiers, and unnecessary device data out of Git and logs.
+- Do not upload source trees, logs, APKs, or device information automatically.
+- Keep experimental recovery work separate from validated Android app/security work.
+
+## Maintenance
+
+Update this index when architecture, milestone status, PR boundaries, or validation facts materially change. Include the source and date for new device observations. Preserve historical evidence, but label superseded facts rather than silently presenting them as current.
