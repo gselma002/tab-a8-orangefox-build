@@ -32,6 +32,11 @@ class JobProtocolTest {
         assertFalse(JobRequestValidator.validate(request(expiry = now + 901), now).isValid)
     }
 
+    @Test fun rejectsExpiryArithmeticOverflow() {
+        val extreme = request(expiry = Long.MAX_VALUE)
+        assertFalse(JobRequestValidator.validate(extreme, Long.MIN_VALUE).isValid)
+    }
+
     @Test fun rejectsUnknownParametersAndOutputFields() {
         assertFalse(
             JobRequestValidator.validate(
@@ -43,11 +48,35 @@ class JobProtocolTest {
         assertFalse(JobRequestValidator.validate(invalidOutput, now).isValid)
     }
 
-    @Test fun localChangeOperationsRequireRegisteredWorkspace() {
-        val request = request(operation = JobOperation.REPOSITORY_STATUS)
-        assertFalse(JobRequestValidator.validate(request, now).isValid)
-        val scoped = request.copy(parameters = mapOf("workspace_id" to "workspace-01"))
+    @Test fun projectOperationsRequireWorkspaceScope() {
+        val statusWithoutWorkspace = request(operation = JobOperation.REPOSITORY_STATUS)
+        assertFalse(JobRequestValidator.validate(statusWithoutWorkspace, now).isValid)
+        assertEquals(JobRisk.READ_ONLY, JobOperation.REPOSITORY_STATUS.risk)
+
+        val checkoutWithoutWorkspace = request(operation = JobOperation.PINNED_SOURCE_CHECKOUT)
+        assertFalse(JobRequestValidator.validate(checkoutWithoutWorkspace, now).isValid)
+
+        val scoped = statusWithoutWorkspace.copy(
+            parameters = mapOf("workspace_id" to "workspace-01")
+        )
         assertTrue(JobRequestValidator.validate(scoped, now).isValid)
+    }
+
+    @Test fun rejectsMalformedWorkspaceAndArtifactIdentifiers() {
+        val badWorkspace = request(
+            operation = JobOperation.REPOSITORY_STATUS,
+            parameters = mapOf("workspace_id" to "../outside")
+        )
+        assertFalse(JobRequestValidator.validate(badWorkspace, now).isValid)
+
+        val missingArtifact = request(operation = JobOperation.APK_INSPECTION)
+        assertFalse(JobRequestValidator.validate(missingArtifact, now).isValid)
+
+        val badArtifact = request(
+            operation = JobOperation.APK_INSPECTION,
+            parameters = mapOf("artifact_id" to "../../private")
+        )
+        assertFalse(JobRequestValidator.validate(badArtifact, now).isValid)
     }
 
     @Test fun sourceOperationsRequireCanonicalRepositoryAndImmutableCommit() {
@@ -62,11 +91,28 @@ class JobProtocolTest {
         val branchRef = valid.copy(commitSha = "main")
         assertFalse(JobRequestValidator.validate(branchRef, now).isValid)
 
-        val credentialUrl = valid.copy(repositoryUrl = "https://user:pass@github.com/example/project")
+        val credentialUrl = valid.copy(
+            repositoryUrl = "https://user:pass@github.com/example/project"
+        )
         assertFalse(JobRequestValidator.validate(credentialUrl, now).isValid)
 
         val otherHost = valid.copy(repositoryUrl = "https://example.com/example/project")
         assertFalse(JobRequestValidator.validate(otherHost, now).isValid)
+
+        val encodedPath = valid.copy(
+            repositoryUrl = "https://github.com/example/%2e%2e"
+        )
+        assertFalse(JobRequestValidator.validate(encodedPath, now).isValid)
+
+        val malformedAuthority = valid.copy(
+            repositoryUrl = "https://github.com:invalid/example/project"
+        )
+        assertFalse(JobRequestValidator.validate(malformedAuthority, now).isValid)
+
+        val extraPath = valid.copy(
+            repositoryUrl = "https://github.com/example/project/extra"
+        )
+        assertFalse(JobRequestValidator.validate(extraPath, now).isValid)
     }
 
     @Test fun stateMachineRejectsInvalidAndTerminalTransitions() {
