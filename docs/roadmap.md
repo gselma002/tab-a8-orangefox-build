@@ -26,8 +26,10 @@ Acceptance:
 - runs on the SM-X200 without root, Shizuku, a PC, or another device;
 - does not write to partitions or alter boot settings;
 - labels unavailable values honestly;
-- unit tests cover parsing and unknown/missing fields;
+- local unit tests cover formatting boundaries and unknown/missing values;
 - an on-device test record captures the exact app version and tablet firmware.
+
+The current Gradle module declares only the local JUnit test dependency; it does not advertise an Android instrumentation runner because no instrumentation tests exist yet.
 
 ## M2 — Device manifest and validator
 
