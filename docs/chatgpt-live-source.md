@@ -5,6 +5,7 @@
 **Last content review:** 2026-11-23  
 **Canonical repository:** https://github.com/gselma002/tab-a8-orangefox-build  
 **Canonical documentation branch:** `architecture/android-first-foundation`  
+**Canonical ChatGPT instructions:** https://github.com/gselma002/tab-a8-orangefox-build/blob/architecture/android-first-foundation/docs/chatgpt-project-instructions.md  
 **Master index:** https://github.com/gselma002/tab-a8-orangefox-build/blob/architecture/android-first-foundation/docs/project-sources.md
 
 ---
@@ -22,6 +23,8 @@ At the beginning of any substantive SM-X200 engineering task:
 7. **Recheck before high-impact decisions.** Refresh source, PR, workflow, and device evidence immediately before recommendations involving security boundaries, release readiness, recovery compatibility, installation, or destructive operations.
 
 ## 2. Canonical maintained documents
+
+- [Canonical ChatGPT Project Instructions](https://github.com/gselma002/tab-a8-orangefox-build/blob/architecture/android-first-foundation/docs/chatgpt-project-instructions.md) — full operating specification; retrieve the latest version before substantive engineering work.
 
 Retrieve the current contents from the canonical branch when relevant:
 
