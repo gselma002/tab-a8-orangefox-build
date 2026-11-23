@@ -43,6 +43,19 @@ Acceptance:
 - unknown fields are handled according to schema policy;
 - no inferred partition or encryption facts are silently accepted.
 
+## B0 — Local automation protocol foundation
+
+Status: initial pure-Kotlin protocol primitives and unit-test source added; Android/Gradle test execution is pending. This is not a running broker or ChatGPT connection.
+
+- Typed operation registry with read-only and local-change risk classes.
+- Request validation for protocol version, request ID, expiry, bounded parameters, output fields, canonical HTTPS GitHub source URL, and immutable commit SHA.
+- Local-change operations require a pre-registered workspace ID.
+- Explicit job state-transition table rejects invalid and terminal-state transitions.
+- Bounded diagnostic redaction for common bearer tokens, credential assignments, and email addresses. This is defense in depth, not a guarantee that arbitrary logs are safe to export.
+- Unit-test source covers validation, state transitions, and redaction; tests have not yet been run in the Android project.
+
+This foundation deliberately contains no shell execution, transport, listener, persistence, Termux integration, Shizuku integration, or privileged operation.
+
 ## M3 — Local job engine prototype
 
 - Follow the security gates in [the local automation bridge proposal](local-automation-bridge.md); this is a design, not an implemented remote-control feature.
