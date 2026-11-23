@@ -1,6 +1,7 @@
 # Engineering decisions and project history
 
 **Classification:** Consolidated record from available project conversation summaries and repository state. Not a verbatim transcript.  
+**Last reviewed:** 2026-11-23  
 **Purpose:** Preserve decisions and their rationale so future work does not repeat unsafe or superseded recommendations.
 
 ## Product constraints
