@@ -21,6 +21,19 @@ Use evidence in this order, while considering both authority and freshness:
 
 A newer source does not automatically outrank a more authoritative source. Mark conflicts explicitly and resolve them using direct evidence.
 
+
+## Curated Project Sources
+
+These five maintained documents are intended to be added to ChatGPT Project Sources (or uploaded as files if the project UI does not support linking repository files):
+
+1. [Project Sources Master Index](project-sources.md) — navigation, source authority, project boundaries, and maintenance rules.
+2. [Device Baseline](source-device-baseline.md) — historical device facts, provenance warnings, and a safe revalidation template.
+3. [Engineering Decisions and History](source-engineering-decisions.md) — consolidated decisions, rationale, prior recovery research, and unresolved questions.
+4. [Implementation and Validation Register](source-validation-register.md) — evidence-based status of code, tests, builds, installation, and hardware verification.
+5. [Technical Research and Compatibility](source-technical-research.md) — Android/Termux/Shizuku constraints, upstream references, and recovery compatibility gates.
+
+The five documents are maintained in the repository under `docs/`. If the ChatGPT project accepts only file uploads rather than repository links, download these five Markdown files and upload them. Keep the repository versions authoritative and refresh uploaded copies after material changes. A URL in this index does not imply automatic synchronization.
+
 ## Repository navigation
 
 - [README](../README.md) — current project scope and validation status.
