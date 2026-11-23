@@ -1,6 +1,7 @@
 # SM-X200 device baseline
 
 **Classification:** Historical user-reported baseline; revalidation required before device-dependent operations.  
+**Last reviewed:** 2026-11-23  
 **Target:** Samsung Galaxy Tab A8 Wi-Fi, model SM-X200, codename gta8wifi.
 
 ## Recorded observations
