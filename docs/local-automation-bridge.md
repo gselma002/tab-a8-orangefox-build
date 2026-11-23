@@ -114,7 +114,7 @@ Terminal records include exit code, start/end timestamps, handler version, outpu
 Define the operation registry, schema, state machine, risk classes, redaction rules, and threat model. Add tests for malformed/expired requests, invalid transitions, output limits, and secret redaction. The current pure validator checks workspace/artifact identifier syntax and request expiry, but it does not prove that an ID exists in a local registry and does not prevent request-ID replay. Those checks require the persistent broker in B1. No command execution yet.
 
 ### B1 — local read-only broker
-Implement device/tool inventory and job status only. No Termux integration, network listener, root, or Shizuku. Demonstrate on SM-X200 and inspect Android permissions/exported components.
+The first storage substrate now exists as an unvalidated app-private SQLite prototype; it stores bounded job metadata, rejects duplicate request IDs at the database primary key, and uses compare-and-set state updates. Complete Android tests and review its migrations/retention behavior before relying on it. Then implement the broker and registry lookups for workspace/artifact IDs, user-facing approval, startup recovery, and read-only device/tool inventory. No Termux integration, network listener, root, or Shizuku. Demonstrate on SM-X200 and inspect Android permissions/exported components.
 
 ### B2 — controlled Termux adapter
 Use documented Termux integration with explicit user enablement. Run one fixed harmless diagnostic handler with a fixed argument array. Test cancellation, hostile parameters, quoting, process death, and Android 14 behavior. Do not run arbitrary repository scripts yet.
