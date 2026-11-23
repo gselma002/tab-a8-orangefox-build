@@ -87,3 +87,16 @@ Acceptance:
 ## Explicitly out of scope until separately reviewed
 
 Automatic flashing, partition writes, formatting, bootloader changes, root installation, and automatic cloud uploads.
+
+
+## B1a — Persistent local job metadata
+
+Status: an app-private SQLite metadata-store prototype has been added; Android compilation, database behavior tests, and on-device validation are pending.
+
+- Stores bounded job metadata only; it does not persist raw command output, credentials, source contents, or artifact bytes.
+- Uses the request ID as a database primary key to reject duplicate IDs across app restarts.
+- Uses compare-and-set state updates to prevent concurrent stale transitions from overwriting newer state.
+- Enforces state-machine transitions, expiry checks, and an explicit approval flag before moving an approval-gated job into the queue.
+- Stores only a bounded, redacted summary; database storage is app-private and no network listener is introduced.
+
+This is a storage primitive, not the B1 broker. The broker still needs registry lookups for workspace/artifact IDs, a user-facing approval flow, startup recovery, retention policy, and tests on Android. The approval flag is an internal API guard, not a cryptographic authorization boundary.
