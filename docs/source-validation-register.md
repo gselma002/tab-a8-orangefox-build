@@ -31,6 +31,25 @@ The Android-first branch includes a local job store with:
 
 These are source-level claims. The migration and behavior still require Android-backed tests. A host SQLite smoke test is not equivalent to Android SQLiteOpenHelper behavior.
 
+## Newly added Android instrumentation coverage — not yet executed
+
+The branch now includes `app/src/androidTest/java/org/recoverydev/probe/LocalJobStoreInstrumentedTest.kt` and configures `AndroidJUnitRunner` with AndroidX Test dependencies in `app/build.gradle.kts`.
+
+The new instrumentation tests cover:
+- Workspace and artifact metadata persistence across database close/reopen.
+- Duplicate request ID rejection.
+- Concurrent compare-and-set transition behavior.
+- The storage API's defensive approval boolean guard.
+- Expiry transition boundaries.
+- Migration from the historical version-1 schema, including preservation of an existing job and subsequent artifact persistence.
+- Redaction and the 512-character persisted summary bound.
+
+The migration fixture was based on the version-1 `LocalJobStore.kt` retrieved from repository history at commit `5c5741563d0575ab8d9ffe7e3b38a559ead052da`, rather than a guessed schema.
+
+**Status:** test source and Gradle configuration implemented; compilation, instrumentation execution, and actual SM-X200 results are pending. Do not report these tests as passed until `connectedDebugAndroidTest` (or the equivalent connected instrumentation task) has completed successfully on the intended Android device.
+
+Official setup reference: https://developer.android.com/training/testing/instrumented-tests
+
 ## Evidence limitations
 
 Previously reported isolated tests:
