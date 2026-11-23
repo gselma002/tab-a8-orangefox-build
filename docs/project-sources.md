@@ -36,6 +36,18 @@ The five documents are maintained in the repository under `docs/`. If the ChatGP
 
 ## Repository navigation
 
+## Source governance and synchronization
+
+Each source document must carry its classification, scope, last-reviewed date, and evidence limitations. Record the exact commit SHA when a claim depends on repository code. Project Sources uploads are snapshots unless the ChatGPT product explicitly provides a supported live-link feature; do not assume GitHub changes synchronize into uploaded files.
+
+Review all five documents when any of these occur: firmware/Android update; repository architecture or PR change; new test/build/device evidence; security incident or newly identified threat; change in recovery source/branch; or a milestone transition. Prefer correcting the authoritative source first, then refresh the Project upload.
+
+Keep the collection small and non-duplicative. The master index should point to detailed sources rather than copying entire sections. Do not put secrets, raw personal device identifiers, access tokens, signing keys, or unredacted diagnostic output in Project Sources.
+
+## Conversation-history coverage and limits
+
+The engineering history document is a curated synthesis of project conversations available in the working context, not a complete export or verbatim archive of every account chat. Conversation titles alone do not establish relevance. Include a conversation only when its technical decisions, device evidence, commands, or constraints materially affect this project. Preserve uncertainty where the original command output or full transcript is unavailable. The user remains the authority for whether a conversation should be moved into the ChatGPT Project.
+
 - [README](../README.md) — current project scope and validation status.
 - [Architecture](architecture.md) — Android-first component boundaries and local-build feasibility.
 - [Security model](security-model.md) — threat model, least privilege, supply-chain, and privacy defaults.
