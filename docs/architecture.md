@@ -38,18 +38,28 @@ A remote runner may be added later as an explicitly optional capability. It must
 
 ## Local-build feasibility gate
 
-A conventional Android recovery source build is large and may not fit or run reliably on the SM-X200. ARM64 Android userspace is not interchangeable with a conventional x86-64 Linux/glibc workstation. PRoot does not remove those differences.
+There are two separate build questions; evidence for one must not be used to claim the other:
 
-Before claiming local compilation support, a prototype must demonstrate on the actual SM-X200:
+1. **Android app build:** a public Termux guide reports a native ARM64 toolchain for Android apps using OpenJDK 21, Gradle 8.11.1, AGP 8.7.3, API 35, and a Termux-native aapt2 override. This makes an on-tablet app build a credible experiment, but it has not yet been independently reproduced on the SM-X200. See [the candidate Termux build path](termux-build-path.md).
+2. **Recovery source build:** a conventional OrangeFox/TWRP source build is substantially larger and has different host-tool, libc, compiler, and resource requirements. A successful Android app build does not prove that the recovery build system can run in Termux or fit the tablet.
+
+Before claiming local app compilation support, demonstrate on the actual SM-X200:
 - the exact supported Android version and execution environment;
 - required toolchain binaries and host compatibility;
 - peak and sustained storage use, including temporary files;
 - peak memory use, process limits, thermal behavior, and elapsed time;
+- successful unit tests and APK compilation from pinned inputs;
+- successful installation and launch on the same tablet.
+
+Before claiming local recovery compilation support, additionally demonstrate:
+- all recovery build host tools run natively or through a documented compatible environment;
+- source synchronization, compiler/toolchain compatibility, and build scripts complete without hidden remote execution;
+- peak storage and memory requirements fit with safe headroom;
 - interruption, cancellation, and resume behavior;
 - successful compilation from pinned source inputs;
 - artifact inspection and reproducibility checks.
 
-If full compilation is infeasible, the app must still provide useful local device inspection, manifest validation, source preparation, build diagnostics, and artifact inspection without implying that compilation occurred.
+If full recovery compilation is infeasible, the app must still provide useful local device inspection, manifest validation, source preparation, build diagnostics, and artifact inspection without implying that compilation occurred.
 
 ## Non-goals for the first milestone
 
