@@ -43,24 +43,37 @@ class LocalJobStoreInstrumentedTest {
 
     @Test
     fun createPersistsWorkspaceAndArtifactAcrossReopen() {
-        val created = requireStore().create(
+        val workspaceJob = requireStore().create(
             request(
+                requestId = "workspace_123",
+                operation = JobOperation.REPOSITORY_STATUS,
+                parameters = mapOf("workspace_id" to "workspace_01")
+            ),
+            NOW
+        )
+        val artifactJob = requireStore().create(
+            request(
+                requestId = "artifact_123",
                 operation = JobOperation.APK_INSPECTION,
                 parameters = mapOf("artifact_id" to "artifact_01")
             ),
             NOW
         )
 
-        assertEquals(JobState.RECEIVED, created.state)
-        assertEquals("artifact_01", created.artifactId)
+        assertEquals(JobState.RECEIVED, workspaceJob.state)
+        assertEquals("workspace_01", workspaceJob.workspaceId)
+        assertEquals("artifact_01", artifactJob.artifactId)
 
         requireStore().close()
         store = LocalJobStore(context)
 
-        val reopened = requireStore().get("request_123")
-        assertNotNull(reopened)
-        assertEquals("artifact_01", reopened?.artifactId)
-        assertEquals(JobState.RECEIVED, reopened?.state)
+        val reopenedWorkspace = requireStore().get("workspace_123")
+        val reopenedArtifact = requireStore().get("artifact_123")
+        assertNotNull(reopenedWorkspace)
+        assertNotNull(reopenedArtifact)
+        assertEquals("workspace_01", reopenedWorkspace?.workspaceId)
+        assertEquals("artifact_01", reopenedArtifact?.artifactId)
+        assertEquals(JobState.RECEIVED, reopenedArtifact?.state)
     }
 
     @Test
