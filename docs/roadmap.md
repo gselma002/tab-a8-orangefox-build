@@ -10,7 +10,11 @@ This roadmap is deliberately evidence-gated. A milestone is complete only when i
 - [x] Define privacy and security defaults.
 - [ ] Review and accept the baseline through a pull request.
 
+The first probe implementation is under `app/`. It intentionally requests no permissions and performs no partition writes. Its source and unit tests have not yet been compiled or executed.
+
 ## M1 — Read-only Android environment probe
+
+Status: initial Kotlin source prototype added; build and on-device validation are pending.
 
 Implement a minimal Kotlin Android app that reports:
 - manufacturer, model, product/device identifiers where available;
