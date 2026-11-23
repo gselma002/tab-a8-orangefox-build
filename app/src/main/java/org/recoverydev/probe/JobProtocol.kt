@@ -75,6 +75,16 @@ object JobRequestValidator {
             if (key !in allowedParameters) errors += "Unsupported parameter: $key"
             if (value.isBlank() || value.length > 128) errors += "Invalid value for parameter: $key"
         }
+        if (request.operation.risk == JobRisk.LOCAL_CHANGE &&
+            request.parameters["workspace_id"].isNullOrBlank()
+        ) {
+            errors += "A pre-registered workspace ID is required for local-change operations"
+        }
+        if (request.operation == JobOperation.APK_INSPECTION &&
+            request.parameters["artifact_id"].isNullOrBlank()
+        ) {
+            errors += "A pre-registered artifact ID is required for APK inspection"
+        }
         if (request.requestedOutputFields.size > 8 ||
             !allowedOutputFields.containsAll(request.requestedOutputFields)
         ) {
@@ -89,7 +99,8 @@ object JobRequestValidator {
         if (sourceOperation) {
             val uri = runCatching { java.net.URI(request.repositoryUrl.orEmpty()) }.getOrNull()
             if (uri == null || uri.scheme != "https" || uri.host != allowedRepositoryHost ||
-                uri.userInfo != null || uri.query != null || uri.fragment != null ||
+                uri.port !in setOf(-1, 443) || uri.userInfo != null ||
+                uri.query != null || uri.fragment != null ||
                 uri.path.count { it == '/' } != 2
             ) {
                 errors += "A canonical HTTPS GitHub repository URL is required"
@@ -110,7 +121,7 @@ object JobStateMachine {
     private val transitions = mapOf(
         JobState.RECEIVED to setOf(JobState.VALIDATING, JobState.REJECTED, JobState.EXPIRED),
         JobState.VALIDATING to setOf(
-            JobState.AWAITING_APPROVAL, JobState.QUEUED, JobState.REJECTED, JobState.EXPIRED
+            JobState.AWAITING_APPROVAL, JobState.REJECTED, JobState.EXPIRED
         ),
         JobState.AWAITING_APPROVAL to setOf(
             JobState.QUEUED, JobState.REJECTED, JobState.EXPIRED
