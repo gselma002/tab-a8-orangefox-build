@@ -1,5 +1,10 @@
 # Project source index
 
+**Classification:** Navigation, provenance, and source-governance index.  
+**Scope:** Maintained project documentation and evidence navigation; not a substitute for source, device, or test inspection.  
+**Last reviewed:** 2026-11-23  
+**Evidence limitations:** Links and summaries may become stale; retrieve the pinned repository branch and task-relevant files before consequential work.
+
 This document is the navigation and provenance index for the SM-X200 Android Recovery, Security & Automation work. It is not a substitute for inspecting the current source tree, device, or test results.
 
 ## Project identity
