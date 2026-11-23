@@ -23,6 +23,17 @@
 
 ## Interpretation rules
 
+## Evidence provenance and confidence
+
+The values above are historical project-context observations. They were not all captured in one contemporaneous diagnostic session, and this document does not currently attach raw command output or screenshots to each row. Consequently:
+- Model and target codename define the intended device, but should still be confirmed in Settings before device-specific work.
+- Android/One UI/firmware/kernel and SoC/platform values are historical reports, not live reads.
+- The unlocked bootloader observation must be reconfirmed from a trustworthy current device screen/property before any boot-chain analysis; do not change bootloader state to perform verification.
+- Shizuku's shell-level behavior is supported by prior command context, including UID 2000 and a permission-denied raw block-device attempt. That evidence supports the non-root warning only; it does not authorize further block access.
+- The approximate free-storage figure is explicitly stale and must never be used for capacity planning.
+
+Do not assign numeric confidence scores without a defined rubric. If evidence is missing, use "unknown" rather than inference.
+
 - Do not assume these values remain current after firmware updates, resets, app updates, or configuration changes.
 - Do not infer partition names, sizes, slot scheme, AVB/vbmeta configuration, rollback behavior, encryption implementation, touchscreen controller, or recovery compatibility from the model alone.
 - Shizuku authorization does not imply root. Shell UID and root UID are distinct security identities.
