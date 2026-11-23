@@ -13,6 +13,7 @@ This repository contains engineering documentation, experimental build material,
 - [Architecture](docs/architecture.md) — component boundaries and Android execution constraints.
 - [Device validation](docs/device-validation.md) — evidence levels and compatibility requirements.
 - [Security model](docs/security-model.md) — least privilege, untrusted build inputs, and privacy defaults.
+- [Local automation bridge](docs/local-automation-bridge.md) — security-first design proposal; not yet implemented and not a live ChatGPT connection.
 - [Termux build path](docs/termux-build-path.md) — candidate same-tablet app-build setup, not yet validated on the SM-X200.
 - [Roadmap](docs/roadmap.md) — acceptance-gated implementation milestones.
 
