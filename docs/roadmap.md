@@ -48,11 +48,13 @@ Acceptance:
 Status: initial pure-Kotlin protocol primitives and unit-test source added; Android/Gradle test execution is pending. This is not a running broker or ChatGPT connection.
 
 - Typed operation registry with read-only and local-change risk classes.
-- Request validation for protocol version, request ID, expiry, bounded parameters, output fields, canonical HTTPS GitHub source URL, and immutable commit SHA.
-- Local-change operations require a pre-registered workspace ID.
+- Request validation for protocol version, request ID syntax, overflow-safe expiry, bounded parameters, output fields, canonical HTTPS GitHub source URL/path, and immutable commit SHA.
+- Project operations require a syntactically valid workspace ID; the future broker must resolve it against an app-owned workspace registry before access. The pure validator does not establish registration or prevent request-ID replay.
+- APK inspection requires a syntactically valid artifact ID; the future broker must resolve it against an app-owned artifact registry.
 - Explicit job state-transition table rejects invalid and terminal-state transitions.
 - Bounded diagnostic redaction for common bearer tokens, credential assignments, and email addresses. This is defense in depth, not a guarantee that arbitrary logs are safe to export.
-- Unit-test source covers validation, state transitions, and redaction; tests have not yet been run in the Android project.
+- Unit-test source covers expiry overflow, workspace/artifact identifier validation, repository URL edge cases, state transitions, and redaction; tests have not yet been run in the Android project.
+- Repository status is classified read-only while remaining workspace-scoped; checkout, tests, and builds remain local-change operations.
 
 This foundation deliberately contains no shell execution, transport, listener, persistence, Termux integration, Shizuku integration, or privileged operation.
 
