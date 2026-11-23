@@ -45,6 +45,7 @@ Acceptance:
 
 ## M3 — Local job engine prototype
 
+- Follow the security gates in [the local automation bridge proposal](local-automation-bridge.md); this is a design, not an implemented remote-control feature.
 - Probe execution capabilities without assuming Termux, PRoot, root, or Shizuku.
 - Evaluate app-compatible native execution and optional Termux integration.
 - Add persistent job state, cancellation, logs, and resource preflight.
