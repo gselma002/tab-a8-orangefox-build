@@ -128,7 +128,7 @@ object JobRequestValidator {
                 Regex("^/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").matches(path) &&
                 path.split('/').drop(1).none { it == "." || it == ".." }
             if (uri == null || uri.isOpaque || uri.scheme != "https" ||
-                !uri.host.equals(allowedRepositoryHost, ignoreCase = true) ||
+                uri.host?.equals(allowedRepositoryHost, ignoreCase = true) != true ||
                 uri.port !in setOf(-1, 443) || uri.rawUserInfo != null ||
                 uri.rawQuery != null || uri.rawFragment != null ||
                 !pathMatches || uri.rawAuthority !in setOf("github.com", "github.com:443")
