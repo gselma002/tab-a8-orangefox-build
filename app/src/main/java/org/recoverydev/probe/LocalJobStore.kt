@@ -173,7 +173,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
             "$COLUMN_EXPIRES_AT > ?"
         }
         val safeSummary = summary?.let {
-            DiagnosticRedactor.redact(it, maxChars = MAX_SUMMARY_CHARS)
+            DiagnosticRedactor.redact(it, maxChars = MAX_SUMMARY_CHARS).take(MAX_SUMMARY_CHARS)
         }
 
         val values = ContentValues().apply {
