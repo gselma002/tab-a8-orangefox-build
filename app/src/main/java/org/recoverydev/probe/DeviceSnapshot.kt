@@ -32,7 +32,7 @@ object SnapshotFormatter {
         if (value == null || value < 0L) return "Unavailable"
         if (value == 0L) return "0 B"
 
-        val units = arrayOf("B", "KiB", "MiB", "GiB", "TiB")
+        val units = arrayOf("B", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB")
         var amount = value.toDouble()
         var unit = 0
         while (amount >= 1024.0 && unit < units.lastIndex) {
