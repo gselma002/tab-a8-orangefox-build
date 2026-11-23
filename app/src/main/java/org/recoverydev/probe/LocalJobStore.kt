@@ -99,8 +99,19 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         try {
             try {
                 db.insertOrThrow(TABLE_JOBS, null, values)
-            } catch (_: SQLiteConstraintException) {
-                throw DuplicateRequestException()
+            } catch (error: SQLiteConstraintException) {
+                val requestAlreadyExists = db.query(
+                    TABLE_JOBS,
+                    arrayOf(COLUMN_REQUEST_ID),
+                    "$COLUMN_REQUEST_ID = ?",
+                    arrayOf(request.requestId),
+                    null,
+                    null,
+                    null,
+                    "1"
+                ).use { it.moveToFirst() }
+                if (requestAlreadyExists) throw DuplicateRequestException()
+                throw error
             }
             db.setTransactionSuccessful()
         } finally {
@@ -119,7 +130,8 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         expectedState: JobState,
         nextState: JobState,
         nowEpochSeconds: Long,
-        summary: String? = null
+        summary: String? = null,
+        userApproved: Boolean = false
     ): Boolean {
         require(requestId.matches(Regex("^[A-Za-z0-9_-]{8,64}$"))) {
             "Invalid request ID"
@@ -127,6 +139,14 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         require(nowEpochSeconds >= 0) { "Invalid update timestamp" }
         require(JobStateMachine.canTransition(expectedState, nextState)) {
             "Invalid job state transition: $expectedState -> $nextState"
+        }
+        if (expectedState == JobState.AWAITING_APPROVAL && nextState == JobState.QUEUED) {
+            require(userApproved) { "Explicit on-device approval is required to queue this job" }
+        }
+        val expiryPredicate = if (nextState == JobState.EXPIRED) {
+            "$COLUMN_EXPIRES_AT <= ?"
+        } else {
+            "$COLUMN_EXPIRES_AT > ?"
         }
         val safeSummary = summary?.let {
             DiagnosticRedactor.redact(it, maxChars = MAX_SUMMARY_CHARS)
@@ -141,8 +161,13 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         return writableDatabase.update(
             TABLE_JOBS,
             values,
-            "$COLUMN_REQUEST_ID = ? AND $COLUMN_STATE = ? AND $COLUMN_CREATED_AT <= ?",
-            arrayOf(requestId, expectedState.name, nowEpochSeconds.toString())
+            "$COLUMN_REQUEST_ID = ? AND $COLUMN_STATE = ? AND $COLUMN_CREATED_AT <= ? AND $expiryPredicate",
+            arrayOf(
+                requestId,
+                expectedState.name,
+                nowEpochSeconds.toString(),
+                nowEpochSeconds.toString()
+            )
         ) == 1
     }
 
@@ -170,7 +195,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
             null,
             null,
             null,
-            "$COLUMN_CREATED_AT DESC",
+            "$COLUMN_CREATED_AT DESC, $COLUMN_REQUEST_ID ASC",
             limit.toString()
         ).use { cursor ->
             return buildList {
