@@ -9,7 +9,7 @@ package org.recoverydev.probe
 enum class JobOperation(val risk: JobRisk) {
     DEVICE_INVENTORY(JobRisk.READ_ONLY),
     TOOL_INVENTORY(JobRisk.READ_ONLY),
-    REPOSITORY_STATUS(JobRisk.LOCAL_CHANGE),
+    REPOSITORY_STATUS(JobRisk.READ_ONLY),
     PINNED_SOURCE_CHECKOUT(JobRisk.LOCAL_CHANGE),
     UNIT_TESTS(JobRisk.LOCAL_CHANGE),
     ANDROID_APP_BUILD(JobRisk.LOCAL_CHANGE),
@@ -53,37 +53,62 @@ data class ValidationResult(val errors: List<String>) {
 
 object JobRequestValidator {
     private val requestIdPattern = Regex("^[A-Za-z0-9_-]{8,64}$")
+    private val identifierPattern = Regex("^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$")
     private val commitPattern = Regex("^[a-fA-F0-9]{40}$")
-    private val allowedRepositoryHost = "github.com"
+    private const val allowedRepositoryHost = "github.com"
     private val allowedOutputFields = setOf(
         "job_id", "state", "exit_code", "started_at", "finished_at",
         "handler_version", "summary", "output_hashes"
     )
     private val allowedParameters = setOf("workspace_id", "artifact_id")
+    private val workspaceScopedOperations = setOf(
+        JobOperation.REPOSITORY_STATUS,
+        JobOperation.PINNED_SOURCE_CHECKOUT,
+        JobOperation.UNIT_TESTS,
+        JobOperation.ANDROID_APP_BUILD
+    )
 
     fun validate(request: JobRequest, nowEpochSeconds: Long): ValidationResult {
         val errors = mutableListOf<String>()
 
         if (request.protocolVersion != 1) errors += "Unsupported protocol version"
         if (!requestIdPattern.matches(request.requestId)) errors += "Invalid request ID"
-        if (request.expiresAtEpochSeconds <= nowEpochSeconds) errors += "Request has expired"
-        if (request.expiresAtEpochSeconds > nowEpochSeconds + 15 * 60) {
-            errors += "Request expiry exceeds 15-minute limit"
+
+        if (request.expiresAtEpochSeconds <= nowEpochSeconds) {
+            errors += "Request has expired"
+        } else {
+            // subtractExact avoids overflow if an untrusted timestamp is near Long.MAX_VALUE.
+            val lifetime = runCatching {
+                Math.subtractExact(request.expiresAtEpochSeconds, nowEpochSeconds)
+            }.getOrNull()
+            if (lifetime == null || lifetime > 15 * 60) {
+                errors += "Request expiry exceeds 15-minute limit"
+            }
         }
+
         if (request.parameters.size > 8) errors += "Too many parameters"
         request.parameters.forEach { (key, value) ->
             if (key !in allowedParameters) errors += "Unsupported parameter: $key"
-            if (value.isBlank() || value.length > 128) errors += "Invalid value for parameter: $key"
+            if (value.isBlank() || value.length > 128) {
+                errors += "Invalid value for parameter: $key"
+            }
         }
-        if (request.operation.risk == JobRisk.LOCAL_CHANGE &&
+
+        request.parameters["workspace_id"]?.let {
+            if (!identifierPattern.matches(it)) errors += "Invalid workspace ID"
+        }
+        request.parameters["artifact_id"]?.let {
+            if (!identifierPattern.matches(it)) errors += "Invalid artifact ID"
+        }
+        if (request.operation in workspaceScopedOperations &&
             request.parameters["workspace_id"].isNullOrBlank()
         ) {
-            errors += "A pre-registered workspace ID is required for local-change operations"
+            errors += "A registered workspace ID is required for this operation"
         }
         if (request.operation == JobOperation.APK_INSPECTION &&
             request.parameters["artifact_id"].isNullOrBlank()
         ) {
-            errors += "A pre-registered artifact ID is required for APK inspection"
+            errors += "A registered artifact ID is required for APK inspection"
         }
         if (request.requestedOutputFields.size > 8 ||
             !allowedOutputFields.containsAll(request.requestedOutputFields)
@@ -98,10 +123,15 @@ object JobRequestValidator {
         )
         if (sourceOperation) {
             val uri = runCatching { java.net.URI(request.repositoryUrl.orEmpty()) }.getOrNull()
-            if (uri == null || uri.scheme != "https" || uri.host != allowedRepositoryHost ||
-                uri.port !in setOf(-1, 443) || uri.userInfo != null ||
-                uri.query != null || uri.fragment != null ||
-                uri.path.count { it == '/' } != 2
+            val path = uri?.rawPath
+            val pathMatches = path != null &&
+                Regex("^/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$").matches(path) &&
+                path.split('/').drop(1).none { it == "." || it == ".." }
+            if (uri == null || uri.isOpaque || uri.scheme != "https" ||
+                !uri.host.equals(allowedRepositoryHost, ignoreCase = true) ||
+                uri.port !in setOf(-1, 443) || uri.rawUserInfo != null ||
+                uri.rawQuery != null || uri.rawFragment != null ||
+                !pathMatches || uri.rawAuthority !in setOf("github.com", "github.com:443")
             ) {
                 errors += "A canonical HTTPS GitHub repository URL is required"
             }
@@ -150,7 +180,10 @@ object DiagnosticRedactor {
     private val bearerPattern = Regex("(?i)\\bBearer\\s+[A-Za-z0-9._~+/-]+=*")
     private val tokenAssignmentPattern =
         Regex("(?i)(token|password|passwd|secret|api[_-]?key)\\s*[:=]\\s*[^\\s,;]+")
-    private val emailPattern = Regex("\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b", RegexOption.IGNORE_CASE)
+    private val emailPattern = Regex(
+        "\\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\\.[A-Z]{2,}\\b",
+        RegexOption.IGNORE_CASE
+    )
 
     fun redact(input: String, maxChars: Int = 8_192): String {
         require(maxChars in 1..65_536) { "Invalid output limit" }
