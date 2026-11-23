@@ -11,6 +11,10 @@ The primary workflow is intended to run on the Android device itself. A PC, seco
 This repository contains engineering documentation, experimental build material, and an initial read-only Android probe source prototype. The app has **not** yet been compiled, installed, or tested on the SM-X200. There is no validated local recovery build engine or recovery image verified on the target tablet.
 
 - [Project source index](docs/project-sources.md) — source authority, provenance, current implementation facts, and validation vocabulary.
+- [Device baseline](docs/source-device-baseline.md) — recorded SM-X200 facts with provenance and revalidation requirements.
+- [Engineering decisions and history](docs/source-engineering-decisions.md) — consolidated project decisions and unresolved questions.
+- [Implementation and validation register](docs/source-validation-register.md) — evidence-based implementation and test status.
+- [Technical research and compatibility](docs/source-technical-research.md) — Android, Termux, Shizuku, and recovery research leads.
 - [Architecture](docs/architecture.md) — component boundaries and Android execution constraints.
 - [Device validation](docs/device-validation.md) — evidence levels and compatibility requirements.
 - [Security model](docs/security-model.md) — least privilege, untrusted build inputs, and privacy defaults.
