@@ -1,0 +1,100 @@
+name: OrangeFox SM-X200 build
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: orangefox-gta8wifi
+  cancel-in-progress: false
+
+jobs:
+  build:
+    # This is a resource-intensive experimental build. Standard runners may
+    # run out of disk space or memory; see the log before treating failure
+    # as a device-tree problem.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+
+    steps:
+      - name: Check out build workspace
+        uses: actions/checkout@v4
+
+      - name: Free runner disk space
+        run: |
+          df -h
+          sudo rm -rf /usr/local/lib/android /usr/share/dotnet /opt/ghc \
+            /usr/local/share/powershell /usr/share/swift /usr/local/.ghcup
+          sudo apt-get clean
+          df -h
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            bc bison build-essential ccache curl flex g++-multilib \
+            gcc-multilib git git-lfs gnupg gperf imagemagick \
+            lib32ncurses-dev lib32readline-dev lib32z1-dev libelf-dev \
+            liblz4-tool libncurses-dev libsdl1.2-dev libssl-dev \
+            libxml2 libxml2-utils lzop pngcrush rsync schedtool \
+            squashfs-tools xsltproc zip zlib1g-dev python3 python-is-python3
+          git lfs install
+
+      - name: Sync OrangeFox 12.1 sources
+        shell: bash
+        run: |
+          set -euxo pipefail
+          mkdir -p "$HOME/OrangeFox_sync"
+          git clone https://gitlab.com/OrangeFox/sync.git "$HOME/OrangeFox_sync/sync"
+          "$HOME/OrangeFox_sync/sync/orangefox_sync.sh" \
+            --branch 12.1 --path "$GITHUB_WORKSPACE/fox_12.1"
+
+      - name: Add SM-X200 device tree
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd "$GITHUB_WORKSPACE/fox_12.1"
+          mkdir -p device/samsung
+          git clone --branch fox-12.1 --single-branch \
+            https://github.com/encipherdev/android_recovery_samsung_gta8wifi.git \
+            device/samsung/gta8wifi
+          git -C device/samsung/gta8wifi lfs pull || true
+
+      - name: Apply documented Unisoc DRM workaround
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd "$GITHUB_WORKSPACE/fox_12.1/bootable/recovery"
+          commit=c2460eb2f1dd6657644bfbfecf3bb52d282495b9
+          if git cat-file -e "${commit}^{commit}"; then
+            git revert --no-edit "${commit}"
+          else
+            echo "::error::Expected DRM commit is not present in this source checkout; refusing to guess at a patch."
+            exit 1
+          fi
+
+      - name: Build recovery image
+        shell: bash
+        run: |
+          set -euxo pipefail
+          cd "$GITHUB_WORKSPACE/fox_12.1"
+          export ALLOW_MISSING_DEPENDENCIES=true
+          export FOX_BUILD_DEVICE=gta8wifi
+          export LC_ALL=C
+          source build/envsetup.sh
+          lunch twrp_gta8wifi-eng
+          mka adbd recoveryimage
+
+      - name: Upload build outputs and logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: gta8wifi-orangefox-build
+          path: |
+            fox_12.1/out/target/product/gta8wifi/*.img
+            fox_12.1/out/target/product/gta8wifi/*.zip
+            fox_12.1/out/target/product/gta8wifi/*.tar
+          if-no-files-found: warn
+          retention-days: 7
