@@ -9,8 +9,9 @@ import android.database.sqlite.SQLiteOpenHelper
 /**
  * App-private, durable job metadata store.
  *
- * It stores bounded metadata only: no command text, raw stdout/stderr, credentials,
- * source contents, or artifact bytes. It is not a broker or an execution service.
+ * Stores bounded metadata only: no command text, raw stdout/stderr, credentials,
+ * source contents, or artifact bytes. This is a storage primitive, not an
+ * authorization boundary, broker, or execution service.
  */
 class LocalJobStore(context: Context) : SQLiteOpenHelper(
     context.applicationContext,
@@ -26,6 +27,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         val updatedAtEpochSeconds: Long,
         val expiresAtEpochSeconds: Long,
         val workspaceId: String?,
+        val artifactId: String?,
         val summary: String?
     )
 
@@ -42,46 +44,63 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         db.execSQL(
             """
             CREATE TABLE $TABLE_JOBS (
-                $COLUMN_REQUEST_ID TEXT PRIMARY KEY NOT NULL,
-                $COLUMN_OPERATION TEXT NOT NULL,
-                $COLUMN_STATE TEXT NOT NULL,
-                $COLUMN_CREATED_AT INTEGER NOT NULL,
-                $COLUMN_UPDATED_AT INTEGER NOT NULL,
-                $COLUMN_EXPIRES_AT INTEGER NOT NULL,
-                $COLUMN_WORKSPACE_ID TEXT,
-                $COLUMN_SUMMARY TEXT,
-                CHECK(length($COLUMN_REQUEST_ID) BETWEEN 8 AND 64),
-                CHECK(length($COLUMN_OPERATION) BETWEEN 1 AND 40),
-                CHECK(length($COLUMN_STATE) BETWEEN 1 AND 24),
-                CHECK($COLUMN_CREATED_AT >= 0),
-                CHECK($COLUMN_UPDATED_AT >= $COLUMN_CREATED_AT),
-                CHECK($COLUMN_EXPIRES_AT > 0),
-                CHECK($COLUMN_SUMMARY IS NULL OR length($COLUMN_SUMMARY) <= 512)
+                $COLUMN_REQUEST_ID TEXT PRIMARY KEY NOT NULL
+                    CHECK(length($COLUMN_REQUEST_ID) BETWEEN 8 AND 64),
+                $COLUMN_OPERATION TEXT NOT NULL CHECK($COLUMN_OPERATION IN (
+                    'DEVICE_INVENTORY', 'TOOL_INVENTORY', 'REPOSITORY_STATUS',
+                    'PINNED_SOURCE_CHECKOUT', 'UNIT_TESTS', 'ANDROID_APP_BUILD',
+                    'APK_INSPECTION'
+                )),
+                $COLUMN_STATE TEXT NOT NULL CHECK($COLUMN_STATE IN (
+                    'RECEIVED', 'VALIDATING', 'AWAITING_APPROVAL', 'QUEUED',
+                    'RUNNING', 'CANCELLING', 'SUCCEEDED', 'FAILED', 'CANCELLED',
+                    'EXPIRED', 'REJECTED', 'INTERRUPTED'
+                )),
+                $COLUMN_CREATED_AT INTEGER NOT NULL CHECK($COLUMN_CREATED_AT >= 0),
+                $COLUMN_UPDATED_AT INTEGER NOT NULL
+                    CHECK($COLUMN_UPDATED_AT >= $COLUMN_CREATED_AT),
+                $COLUMN_EXPIRES_AT INTEGER NOT NULL CHECK($COLUMN_EXPIRES_AT > 0),
+                $COLUMN_WORKSPACE_ID TEXT
+                    CHECK($COLUMN_WORKSPACE_ID IS NULL OR length($COLUMN_WORKSPACE_ID) BETWEEN 1 AND 64),
+                $COLUMN_ARTIFACT_ID TEXT
+                    CHECK($COLUMN_ARTIFACT_ID IS NULL OR length($COLUMN_ARTIFACT_ID) BETWEEN 1 AND 64),
+                $COLUMN_SUMMARY TEXT
+                    CHECK($COLUMN_SUMMARY IS NULL OR length($COLUMN_SUMMARY) <= $MAX_SUMMARY_CHARS)
             )
             """.trimIndent()
         )
-        db.execSQL(
-            "CREATE INDEX jobs_created_at_idx ON $TABLE_JOBS ($COLUMN_CREATED_AT DESC)"
-        )
+        createIndexes(db)
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // No destructive automatic migration. Add explicit, versioned migrations here.
-        throw IllegalStateException("Unsupported job database migration: $oldVersion -> $newVersion")
+        // Preserve existing metadata. Never drop or recreate the jobs table automatically.
+        if (oldVersion == 1 && newVersion == 2) {
+            db.execSQL(
+                """
+                ALTER TABLE $TABLE_JOBS
+                ADD COLUMN $COLUMN_ARTIFACT_ID TEXT
+                CHECK($COLUMN_ARTIFACT_ID IS NULL OR length($COLUMN_ARTIFACT_ID) BETWEEN 1 AND 64)
+                """.trimIndent()
+            )
+            db.execSQL(
+                "CREATE INDEX IF NOT EXISTS jobs_state_expiry_idx " +
+                    "ON $TABLE_JOBS ($COLUMN_STATE, $COLUMN_EXPIRES_AT)"
+            )
+            return
+        }
+        throw IllegalStateException(
+            "Unsupported job database migration: $oldVersion -> $newVersion"
+        )
     }
 
-    /**
-     * Validates and persists a request as RECEIVED in one database transaction.
-     * The primary key makes duplicate request IDs fail closed across app restarts.
-     */
+    /** Validates and persists a request as RECEIVED in one transaction. */
     fun create(request: JobRequest, nowEpochSeconds: Long): Record {
+        require(nowEpochSeconds >= 0) { "Invalid creation timestamp" }
         val validation = JobRequestValidator.validate(request, nowEpochSeconds)
         require(validation.isValid) {
             "Invalid job request: " + validation.errors.joinToString("; ")
         }
-        require(nowEpochSeconds >= 0) { "Invalid creation timestamp" }
 
-        val workspaceId = request.parameters["workspace_id"]
         val values = ContentValues().apply {
             put(COLUMN_REQUEST_ID, request.requestId)
             put(COLUMN_OPERATION, request.operation.name)
@@ -89,8 +108,8 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
             put(COLUMN_CREATED_AT, nowEpochSeconds)
             put(COLUMN_UPDATED_AT, nowEpochSeconds)
             put(COLUMN_EXPIRES_AT, request.expiresAtEpochSeconds)
-            if (workspaceId == null) putNull(COLUMN_WORKSPACE_ID)
-            else put(COLUMN_WORKSPACE_ID, workspaceId)
+            putNullable(COLUMN_WORKSPACE_ID, request.parameters["workspace_id"])
+            putNullable(COLUMN_ARTIFACT_ID, request.parameters["artifact_id"])
             putNull(COLUMN_SUMMARY)
         }
 
@@ -100,7 +119,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
             try {
                 db.insertOrThrow(TABLE_JOBS, null, values)
             } catch (error: SQLiteConstraintException) {
-                val requestAlreadyExists = db.query(
+                val duplicate = db.query(
                     TABLE_JOBS,
                     arrayOf(COLUMN_REQUEST_ID),
                     "$COLUMN_REQUEST_ID = ?",
@@ -110,20 +129,24 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
                     null,
                     "1"
                 ).use { it.moveToFirst() }
-                if (requestAlreadyExists) throw DuplicateRequestException()
+                if (duplicate) throw DuplicateRequestException()
                 throw error
             }
             db.setTransactionSuccessful()
         } finally {
             db.endTransaction()
         }
+
         return get(request.requestId)
             ?: throw IllegalStateException("Persisted job could not be read back")
     }
 
     /**
-     * Compare-and-set transition prevents concurrent callers from overwriting
-     * a newer state. Callers must separately enforce visible user approval.
+     * Performs a compare-and-set transition.
+     *
+     * The timestamp predicate prevents updated_at from moving backwards.
+     * userApproved is only a defensive API guard; the broker/UI must enforce
+     * real, visible on-device approval before calling this method.
      */
     fun transition(
         requestId: String,
@@ -133,16 +156,17 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         summary: String? = null,
         userApproved: Boolean = false
     ): Boolean {
-        require(requestId.matches(Regex("^[A-Za-z0-9_-]{8,64}$"))) {
-            "Invalid request ID"
-        }
+        require(requestId.matches(REQUEST_ID_PATTERN)) { "Invalid request ID" }
         require(nowEpochSeconds >= 0) { "Invalid update timestamp" }
         require(JobStateMachine.canTransition(expectedState, nextState)) {
             "Invalid job state transition: $expectedState -> $nextState"
         }
         if (expectedState == JobState.AWAITING_APPROVAL && nextState == JobState.QUEUED) {
-            require(userApproved) { "Explicit on-device approval is required to queue this job" }
+            require(userApproved) {
+                "Explicit on-device approval is required to queue this job"
+            }
         }
+
         val expiryPredicate = if (nextState == JobState.EXPIRED) {
             "$COLUMN_EXPIRES_AT <= ?"
         } else {
@@ -155,16 +179,25 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         val values = ContentValues().apply {
             put(COLUMN_STATE, nextState.name)
             put(COLUMN_UPDATED_AT, nowEpochSeconds)
-            if (safeSummary == null) putNull(COLUMN_SUMMARY)
-            else put(COLUMN_SUMMARY, safeSummary)
+            putNullable(COLUMN_SUMMARY, safeSummary)
         }
+
+        val where = listOf(
+            "$COLUMN_REQUEST_ID = ?",
+            "$COLUMN_STATE = ?",
+            "$COLUMN_CREATED_AT <= ?",
+            "$COLUMN_UPDATED_AT <= ?",
+            expiryPredicate
+        ).joinToString(" AND ")
+
         return writableDatabase.update(
             TABLE_JOBS,
             values,
-            "$COLUMN_REQUEST_ID = ? AND $COLUMN_STATE = ? AND $COLUMN_CREATED_AT <= ? AND $expiryPredicate",
+            where,
             arrayOf(
                 requestId,
                 expectedState.name,
+                nowEpochSeconds.toString(),
                 nowEpochSeconds.toString(),
                 nowEpochSeconds.toString()
             )
@@ -186,8 +219,10 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    fun recent(limit: Int = 25): List<Record> {
-        require(limit in 1..100) { "Limit must be between 1 and 100" }
+    fun recent(limit: Int = DEFAULT_RECENT_LIMIT): List<Record> {
+        require(limit in 1..MAX_RECENT_LIMIT) {
+            "Limit must be between 1 and $MAX_RECENT_LIMIT"
+        }
         readableDatabase.query(
             TABLE_JOBS,
             RECORD_COLUMNS,
@@ -204,26 +239,39 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         }
     }
 
-    private fun android.database.Cursor.toRecord(): Record {
-        val operationName = getString(getColumnIndexOrThrow(COLUMN_OPERATION))
-        val stateName = getString(getColumnIndexOrThrow(COLUMN_STATE))
-        return Record(
-            requestId = getString(getColumnIndexOrThrow(COLUMN_REQUEST_ID)),
-            operation = JobOperation.valueOf(operationName),
-            state = JobState.valueOf(stateName),
-            createdAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_CREATED_AT)),
-            updatedAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_UPDATED_AT)),
-            expiresAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_EXPIRES_AT)),
-            workspaceId = getString(getColumnIndexOrThrow(COLUMN_WORKSPACE_ID)),
-            summary = getString(getColumnIndexOrThrow(COLUMN_SUMMARY))
+    private fun android.database.Cursor.toRecord(): Record = Record(
+        requestId = getString(getColumnIndexOrThrow(COLUMN_REQUEST_ID)),
+        operation = JobOperation.valueOf(getString(getColumnIndexOrThrow(COLUMN_OPERATION))),
+        state = JobState.valueOf(getString(getColumnIndexOrThrow(COLUMN_STATE))),
+        createdAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_CREATED_AT)),
+        updatedAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_UPDATED_AT)),
+        expiresAtEpochSeconds = getLong(getColumnIndexOrThrow(COLUMN_EXPIRES_AT)),
+        workspaceId = getString(getColumnIndexOrThrow(COLUMN_WORKSPACE_ID)),
+        artifactId = getString(getColumnIndexOrThrow(COLUMN_ARTIFACT_ID)),
+        summary = getString(getColumnIndexOrThrow(COLUMN_SUMMARY))
+    )
+
+    private fun ContentValues.putNullable(key: String, value: String?) {
+        if (value == null) putNull(key) else put(key, value)
+    }
+
+    private fun createIndexes(db: SQLiteDatabase) {
+        db.execSQL(
+            "CREATE INDEX jobs_created_at_idx ON $TABLE_JOBS ($COLUMN_CREATED_AT DESC)"
+        )
+        db.execSQL(
+            "CREATE INDEX jobs_state_expiry_idx ON $TABLE_JOBS ($COLUMN_STATE, $COLUMN_EXPIRES_AT)"
         )
     }
 
     companion object {
         private const val DATABASE_NAME = "local_jobs.db"
-        private const val DATABASE_VERSION = 1
+        private const val DATABASE_VERSION = 2
         private const val TABLE_JOBS = "jobs"
         private const val MAX_SUMMARY_CHARS = 512
+        private const val DEFAULT_RECENT_LIMIT = 25
+        private const val MAX_RECENT_LIMIT = 100
+        private val REQUEST_ID_PATTERN = Regex("^[A-Za-z0-9_-]{8,64}$")
 
         private const val COLUMN_REQUEST_ID = "request_id"
         private const val COLUMN_OPERATION = "operation"
@@ -232,6 +280,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
         private const val COLUMN_UPDATED_AT = "updated_at"
         private const val COLUMN_EXPIRES_AT = "expires_at"
         private const val COLUMN_WORKSPACE_ID = "workspace_id"
+        private const val COLUMN_ARTIFACT_ID = "artifact_id"
         private const val COLUMN_SUMMARY = "summary"
 
         private val RECORD_COLUMNS = arrayOf(
@@ -242,6 +291,7 @@ class LocalJobStore(context: Context) : SQLiteOpenHelper(
             COLUMN_UPDATED_AT,
             COLUMN_EXPIRES_AT,
             COLUMN_WORKSPACE_ID,
+            COLUMN_ARTIFACT_ID,
             COLUMN_SUMMARY
         )
     }
