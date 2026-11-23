@@ -4,7 +4,7 @@ An experimental, Android-device-first project for researching, validating, and e
 
 ## Core requirement
 
-The primary workflow is intended to run on the Android device itself. A PC, second phone, or remote build service must not be a required dependency. Local full-source compilation is **not yet demonstrated** on the SM-X200; the project will measure real toolchain, storage, memory, and thermal constraints before claiming support.
+The primary workflow is intended to run on the Android device itself. A PC, second phone, or remote build service must not be a required dependency. Local full-source recovery compilation is **not yet demonstrated** on the SM-X200; the project will measure real toolchain, storage, memory, and thermal constraints before claiming support.
 
 ## Current status
 
@@ -13,6 +13,7 @@ This repository contains engineering documentation, experimental build material,
 - [Architecture](docs/architecture.md) — component boundaries and Android execution constraints.
 - [Device validation](docs/device-validation.md) — evidence levels and compatibility requirements.
 - [Security model](docs/security-model.md) — least privilege, untrusted build inputs, and privacy defaults.
+- [Termux build path](docs/termux-build-path.md) — candidate same-tablet app-build setup, not yet validated on the SM-X200.
 - [Roadmap](docs/roadmap.md) — acceptance-gated implementation milestones.
 
 ## Safety
