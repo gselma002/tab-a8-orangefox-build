@@ -8,7 +8,7 @@ The primary workflow is intended to run on the Android device itself. A PC, seco
 
 ## Current status
 
-This repository currently contains planning and experimental build material. It does **not** yet contain a working Android application, a validated local build engine, or a recovery image verified on the target tablet.
+This repository contains engineering documentation, experimental build material, and an initial read-only Android probe source prototype. The app has **not** yet been compiled, installed, or tested on the SM-X200. There is no validated local recovery build engine or recovery image verified on the target tablet.
 
 - [Architecture](docs/architecture.md) — component boundaries and Android execution constraints.
 - [Device validation](docs/device-validation.md) — evidence levels and compatibility requirements.
