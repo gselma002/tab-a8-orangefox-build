@@ -94,9 +94,14 @@ Automatic flashing, partition writes, formatting, bootloader changes, root insta
 Status: an app-private SQLite metadata-store prototype has been added; Android compilation, database behavior tests, and on-device validation are pending.
 
 - Stores bounded job metadata only; it does not persist raw command output, credentials, source contents, or artifact bytes.
+- Persists both workspace and artifact identifiers, including APK-inspection artifact references.
 - Uses the request ID as a database primary key to reject duplicate IDs across app restarts.
-- Uses compare-and-set state updates to prevent concurrent stale transitions from overwriting newer state.
-- Enforces state-machine transitions, expiry checks, and an explicit approval flag before moving an approval-gated job into the queue.
-- Stores only a bounded, redacted summary; database storage is app-private and no network listener is introduced.
+- Uses compare-and-set state updates and a monotonic timestamp predicate to prevent stale or out-of-order updates.
+- Enforces state-machine transitions, expiry checks, bounded summary storage, and an explicit approval flag before moving an approval-gated job into the queue.
+- Adds database constraints for operation/state values and identifier/summary lengths on newly created databases.
+- Adds an explicit schema v1-to-v2 migration that preserves existing job records while adding artifact ID storage.
+- Adds an index for state/expiry lookups; no network listener or command execution is introduced.
 
-This is a storage primitive, not the B1 broker. The broker still needs registry lookups for workspace/artifact IDs, a user-facing approval flow, startup recovery, retention policy, and tests on Android. The approval flag is an internal API guard, not a cryptographic authorization boundary.
+**Validation status:** source changes are committed to the PR branch, but Android compilation, the v1-to-v2 SQLite migration, database behavior, concurrency, and on-device persistence remain untested. The migration must be exercised against an actual v1 database before the store is relied upon.
+
+This is a storage primitive, not the B1 broker. The broker still needs registry lookups for workspace/artifact IDs, a user-facing approval flow, startup recovery, retention policy, and Android tests. The approval flag is an internal API guard, not a cryptographic authorization boundary.
