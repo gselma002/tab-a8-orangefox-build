@@ -13,6 +13,17 @@ This document is the navigation and provenance index for the SM-X200 Android Rec
 - Primary repository: https://github.com/gselma002/tab-a8-orangefox-build
 - Product constraint: the primary workflow must operate on the tablet itself; a PC, second phone, or remote build worker is not a required dependency.
 
+## Canonical ChatGPT operating instructions
+
+[Canonical ChatGPT Project Instructions](chatgpt-project-instructions.md) is the maintained, version-controlled operating specification. It covers safety, source freshness, repository governance, engineering workflow, current milestone, and evidence requirements.
+
+Recommended arrangement:
+- Keep the ChatGPT Project's own Instructions concise: identify this canonical file, require on-demand retrieval from the current branch before consequential work, and retain the non-negotiable safety rules locally.
+- Use the GitHub copy as the maintained canonical document.
+- Use [chatgpt-live-source.md](chatgpt-live-source.md) as a small pointer/freshness guide if a Project Source upload is useful.
+
+Important: GitHub, Project Instructions, and uploaded Project Sources do not automatically synchronize with one another. GitHub can be retrieved on demand only when an authorized connection/tool is available. Uploaded files are snapshots and must be replaced manually when live retrieval is unavailable.
+
 ## Source authority
 
 Use evidence in this order, while considering both authority and freshness:
@@ -28,21 +39,16 @@ A newer source does not automatically outrank a more authoritative source. Mark 
 
 ## Recommended ChatGPT Project source
 
-**Upload [chatgpt-live-source.md](chatgpt-live-source.md) as the single primary Project Source.** It is a stable pointer to the maintained GitHub documents and tells future project work to retrieve current repository content on demand when GitHub access is connected.
+Upload [chatgpt-live-source.md](chatgpt-live-source.md) as the single primary Project Source if a source upload is desired. It points to the canonical instructions and maintained technical documents. It does not self-update.
 
-This pointer is not a live-sync mechanism: the uploaded file itself does not change when GitHub changes. GitHub's ChatGPT connection can retrieve permitted repository content on demand, but it does not create a continuously synchronized Project index. If live retrieval is unavailable in a chat, disclose that limitation and use the linked files only after retrieving them, or refresh uploaded snapshots manually.
+## Curated technical Project Sources
 
-## Curated Project Sources
+1. [Device Baseline](source-device-baseline.md) — historical device facts, provenance warnings, and safe revalidation steps.
+2. [Engineering Decisions and History](source-engineering-decisions.md) — consolidated decisions, rationale, prior recovery research, and unresolved questions.
+3. [Implementation and Validation Register](source-validation-register.md) — evidence-based status of code, tests, builds, installation, and hardware verification.
+4. [Technical Research and Compatibility](source-technical-research.md) — Android/Termux/Shizuku constraints, upstream references, and recovery compatibility gates.
 
-The following five detailed documents remain the maintained engineering reference set. They can be uploaded as additional Project Sources when convenient, but the live pointer above is the preferred single upload:
-
-1. [Project Sources Master Index](project-sources.md) — navigation, source authority, project boundaries, and maintenance rules.
-2. [Device Baseline](source-device-baseline.md) — historical device facts, provenance warnings, and a safe revalidation template.
-3. [Engineering Decisions and History](source-engineering-decisions.md) — consolidated decisions, rationale, prior recovery research, and unresolved questions.
-4. [Implementation and Validation Register](source-validation-register.md) — evidence-based status of code, tests, builds, installation, and hardware verification.
-5. [Technical Research and Compatibility](source-technical-research.md) — Android/Termux/Shizuku constraints, upstream references, and recovery compatibility gates.
-
-The five documents are maintained in the repository under `docs/`. Repository versions are authoritative. A URL in this index does not imply automatic synchronization.
+The documents are maintained in the repository under `docs/`. Repository versions are authoritative. A URL in this index does not imply automatic synchronization.
 
 ## Repository navigation
 
@@ -58,20 +64,20 @@ The five documents are maintained in the repository under `docs/`. Repository ve
 
 Each source document must carry its classification, scope, last-reviewed date, and evidence limitations. Record the exact commit SHA when a claim depends on repository code. Project Sources uploads are snapshots unless the ChatGPT product explicitly provides a supported live-link feature; do not assume GitHub changes synchronize into uploaded files.
 
-Review all five documents when any of these occur: firmware/Android update; repository architecture or PR change; new test/build/device evidence; security incident or newly identified threat; change in recovery source/branch; or a milestone transition. Prefer correcting the authoritative source first, then refresh any uploaded detailed snapshots that are relied upon.
+Review relevant sources when firmware/Android changes; repository architecture or PR changes; new test/build/device evidence appears; a security issue is found; recovery source/branch changes; or a milestone transitions. Correct the authoritative source first, then refresh uploaded snapshots if they are relied upon.
 
-Keep the collection small and non-duplicative. The master index should point to detailed sources rather than copying entire sections. Do not put secrets, raw personal device identifiers, access tokens, signing keys, or unredacted diagnostic output in Project Sources.
+Keep the collection small and non-duplicative. Do not put secrets, raw personal device identifiers, access tokens, signing keys, or unredacted diagnostic output in Project Sources.
 
 ## Conversation-history coverage and limits
 
-The engineering history document is a curated synthesis of project conversations available in the working context, not a complete export or verbatim archive of every account chat. Conversation titles alone do not establish relevance. Include a conversation only when its technical decisions, device evidence, commands, or constraints materially affect this project. Preserve uncertainty where the original command output or full transcript is unavailable. The user remains the authority for whether a conversation should be moved into the ChatGPT Project.
+The engineering history document is a curated synthesis of project conversations available in the working context, not a complete export or verbatim archive of every account chat. Include a conversation only when its technical decisions, device evidence, commands, or constraints materially affect this project. Preserve uncertainty where original command output or the full transcript is unavailable.
 
 ## Pull-request boundaries
 
 - [PR #1 — experimental recovery build workflow](https://github.com/gselma002/tab-a8-orangefox-build/pull/1). Keep experimental and separate from the Android-first application/security foundation.
 - [PR #2 — Android-first architecture and security foundation](https://github.com/gselma002/tab-a8-orangefox-build/pull/2). Contains the app/protocol/storage prototypes and engineering documentation.
 
-Do not merge either pull request without explicit owner authorization. Refresh the live PR state before making claims or changes.
+Do not merge either pull request without explicit owner authorization. Refresh live PR state before making claims or changes.
 
 ## Current implementation facts
 
@@ -81,7 +87,7 @@ The Android-first branch contains:
 - an app-private SQLite job metadata-store prototype;
 - architecture, security, device-validation, local-bridge, Termux, and roadmap documentation.
 
-The job store has been updated to persist both workspace and artifact IDs, reject duplicate request IDs, use compare-and-set state transitions with nondecreasing update timestamps, and support a v1-to-v2 schema migration. These changes are source-level only until Android compilation, database tests, migration tests, and actual tablet validation have run.
+The job store persists workspace and artifact IDs, rejects duplicate request IDs, uses compare-and-set state transitions with nondecreasing update timestamps, and contains a v1-to-v2 schema migration. These are source-level facts only until Android compilation, database tests, migration tests, and actual tablet validation have run.
 
 There is no implemented command runner, complete broker, Termux/Shizuku integration, network listener, or ChatGPT-to-device transport. The local bridge document is a design proposal, not a functioning feature.
 
@@ -105,7 +111,7 @@ Report each status separately:
 - **Proposed:** design only.
 - **Implemented:** source/configuration changed.
 - **Compiled:** relevant build completed.
-- **Unit-tested:** relevant automated unit tests passed.
+- **Unit-tested:** relevant automated tests passed.
 - **Integration-tested:** connected components passed integration tests.
 - **Installed:** installed on the SM-X200.
 - **Device-tested:** behavior observed on the actual tablet.
