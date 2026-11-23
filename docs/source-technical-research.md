@@ -40,6 +40,34 @@ Official documentation to consult at implementation time:
 
 ## Recovery source leads
 
+## Research status and version pinning
+
+The links and project summaries in this document are research entry points, not a claim that every upstream page or repository revision was freshly audited on the document's creation date. Before adopting a dependency, command, device tree, kernel, patch, or recovery image:
+1. Open the upstream source directly and record the check date.
+2. Pin a tag or immutable commit SHA; branches such as `fox-12.1` are mutable.
+3. Inspect licenses, provenance, release assets, build scripts, and all privileged/destructive operations.
+4. Compare Android version, kernel ABI/configuration, firmware, partition model, encryption implementation, and hardware variants.
+5. Record the exact files inspected and distinguish source review from compilation, static image inspection, boot testing, and functional hardware testing.
+6. Recheck advisories and dependency compatibility before release.
+
+A URL being present here does not imply endorsement, safety, freshness, or compatibility. Do not treat a GitHub release's description as independent test evidence.
+
+## Compatibility matrix
+
+| Dimension | Required evidence | Current status |
+|---|---|---|
+| Exact model/variant | Settings/device identifiers and regional variant | Historical SM-X200 target; recheck |
+| Firmware/build | Current build ID and security patch | Historical X200XXS6DYG6; recheck |
+| Kernel | Exact kernel source/config and runtime release | Runtime release historically reported; source/config not established |
+| Boot image format | Header/version and partition/slot evidence | Unknown |
+| AVB/vbmeta | Current verified-boot configuration and signing chain | Unknown |
+| Encryption | FBE/metadata encryption and keymaster dependencies | Unknown |
+| Display/touch | Panel and touch-controller identification plus driver support | Unknown |
+| USB/ADB | Actual recovery-mode enumeration and input/output tests | Unknown |
+| Recovery functions | Boot, mount, backup, restore, decryption tests | Not verified |
+
+Unknown cells are blocking questions, not permission to assume a default.
+
 These repositories are research inputs, not validated builds:
 
 | Source | Known context | Required caution |
