@@ -1,8 +1,26 @@
-# Galaxy Tab A8 OrangeFox build workspace
+# Galaxy Tab A8 recovery development workspace
 
-Experimental build workspace for the Samsung Galaxy Tab A8 Wi-Fi (SM-X200 / gta8wifi).
+An experimental, Android-device-first project for researching, validating, and eventually building custom recovery software. The initial reference device is the Samsung Galaxy Tab A8 Wi-Fi (SM-X200 / `gta8wifi`).
+
+## Core requirement
+
+The primary workflow is intended to run on the Android device itself. A PC, second phone, or remote build service must not be a required dependency. Local full-source compilation is **not yet demonstrated** on the SM-X200; the project will measure real toolchain, storage, memory, and thermal constraints before claiming support.
+
+## Current status
+
+This repository currently contains planning and experimental build material. It does **not** yet contain a working Android application, a validated local build engine, or a recovery image verified on the target tablet.
+
+- [Architecture](docs/architecture.md) — component boundaries and Android execution constraints.
+- [Device validation](docs/device-validation.md) — evidence levels and compatibility requirements.
+- [Security model](docs/security-model.md) — least privilege, untrusted build inputs, and privacy defaults.
+- [Roadmap](docs/roadmap.md) — acceptance-gated implementation milestones.
 
 ## Safety
-A successful compile does not prove that a recovery image is bootable or compatible with a particular firmware build. Do not flash generated images until the recovery has been independently validated for the exact target firmware, partition layout, AVB behavior, touchscreen, and data decryption.
 
-The first CI workflow will be experimental and manually triggered.
+A successful compile does not prove that a recovery image is bootable or compatible with a particular firmware build. Static inspection does not prove hardware operation. Encryption/decryption support must be tested against the exact firmware and data configuration.
+
+The initial implementation is read-only with respect to device partitions. It must not flash, format, erase, repartition, change bootloader settings, or write raw block devices.
+
+## Experimental CI
+
+An experimental GitHub Actions build proposal is tracked separately in [PR #1](https://github.com/gselma002/tab-a8-orangefox-build/pull/1). It is not the Android-first product implementation and must not be treated as proof that builds can run locally on the tablet. Do not flash an artifact based only on CI success.
