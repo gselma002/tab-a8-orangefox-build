@@ -10,7 +10,8 @@ The primary workflow is intended to run on the Android device itself. A PC, seco
 
 This repository contains engineering documentation, experimental build material, and an initial read-only Android probe source prototype. The app has **not** yet been compiled, installed, or tested on the SM-X200. There is no validated local recovery build engine or recovery image verified on the target tablet.
 
-- [ChatGPT Project Source control file](docs/chatgpt-live-source.md) — recommended single upload; explains how to retrieve current GitHub sources on demand and the limits of snapshot uploads.
+- [Canonical ChatGPT Project Instructions](docs/chatgpt-project-instructions.md) — version-controlled operating specification; retrieve the current branch version before substantive work.
+- [ChatGPT live-source pointer](docs/chatgpt-live-source.md) — optional single Project Source upload; explains on-demand retrieval and snapshot limitations.
 - [Project source index](docs/project-sources.md) — source authority, provenance, current implementation facts, and validation vocabulary.
 - [Device baseline](docs/source-device-baseline.md) — recorded SM-X200 facts with provenance and revalidation requirements.
 - [Engineering decisions and history](docs/source-engineering-decisions.md) — consolidated project decisions and unresolved questions.
