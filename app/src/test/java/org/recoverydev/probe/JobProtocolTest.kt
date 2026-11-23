@@ -43,9 +43,17 @@ class JobProtocolTest {
         assertFalse(JobRequestValidator.validate(invalidOutput, now).isValid)
     }
 
+    @Test fun localChangeOperationsRequireRegisteredWorkspace() {
+        val request = request(operation = JobOperation.REPOSITORY_STATUS)
+        assertFalse(JobRequestValidator.validate(request, now).isValid)
+        val scoped = request.copy(parameters = mapOf("workspace_id" to "workspace-01"))
+        assertTrue(JobRequestValidator.validate(scoped, now).isValid)
+    }
+
     @Test fun sourceOperationsRequireCanonicalRepositoryAndImmutableCommit() {
         val valid = request(
             operation = JobOperation.ANDROID_APP_BUILD,
+            parameters = mapOf("workspace_id" to "workspace-01"),
             repositoryUrl = "https://github.com/example/project",
             commitSha = "a".repeat(40)
         )
@@ -64,6 +72,7 @@ class JobProtocolTest {
     @Test fun stateMachineRejectsInvalidAndTerminalTransitions() {
         assertTrue(JobStateMachine.canTransition(JobState.RECEIVED, JobState.VALIDATING))
         assertFalse(JobStateMachine.canTransition(JobState.RECEIVED, JobState.RUNNING))
+        assertFalse(JobStateMachine.canTransition(JobState.VALIDATING, JobState.QUEUED))
         assertFalse(JobStateMachine.canTransition(JobState.SUCCEEDED, JobState.RUNNING))
         assertEquals(
             JobState.QUEUED,
