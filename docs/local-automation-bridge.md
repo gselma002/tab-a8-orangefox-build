@@ -140,3 +140,17 @@ The bridge is not ready for general use until:
 7. Cancellation, process death, replay, expiry, and malformed-input tests pass.
 8. The actual SM-X200 passes on-device tests.
 9. Any ChatGPT connection is proven through a supported product integration, not assumed from Shizuku, Termux, or localhost.
+
+
+### B1a — SQLite metadata-store hardening
+
+The SQLite prototype now retains both `workspace_id` and `artifact_id`, so an accepted APK-inspection request does not lose its artifact reference when persisted. The database version is 2; the explicit 1-to-2 migration adds the nullable artifact column without dropping existing job records.
+
+The current implementation also:
+- constrains operation and state values for newly created databases;
+- bounds workspace/artifact identifier lengths and summary length at the database layer;
+- rejects state updates whose timestamp would move `updated_at` backwards;
+- indexes state/expiry lookups for future expiry and recovery processing;
+- bounds the final persisted summary after redaction, including any expansion caused by replacement markers.
+
+These are source-level changes only. The Android Gradle build, SQLite migration, database behavior, concurrency, and on-device persistence have not yet been executed. The v1-to-v2 migration must be tested against a real v1 database before relying on upgrades. The approval boolean remains a defensive API guard, not an authorization boundary.
