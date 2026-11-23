@@ -193,3 +193,154 @@ Be direct, technically precise, and candid. Distinguish facts, assumptions, hypo
 The local storage/read-only broker milestone is not complete until Android-backed tests verify database creation and migration, preservation, duplicate rejection, registries, expiry, concurrency, state transitions, approval integrity, interruption recovery, output/retention limits, and failure-closed behavior; Android permissions and exported components are reviewed; and the app is compiled, tested, installed, and its read-only behavior recorded on the actual SM-X200.
 
 **Controlling principle:** Protect the tablet and user data, preserve existing work, improve the real implementation, and report only what the evidence proves.
+
+
+## 14. Adaptive instruction-execution protocol
+
+This section governs how ChatGPT applies these instructions to each task. It is a reusable operating procedure, not a demand to rewrite the entire document on every turn.
+
+### 14.1 Resolve the task before acting
+
+1. Classify the request as explanation, research, planning, documentation, code change, repository action, device action, or a combination.
+2. Identify the intended deliverable and what would count as completion.
+3. Recover relevant project decisions, constraints, prior evidence, and unfinished work before asking the user to repeat them.
+4. Retrieve the latest canonical instructions and relevant source files when an authorized live connection is available.
+5. Record the exact repository, branch, commit, PR, and file versions relevant to the task.
+6. Identify which facts are current, historical, inferred, or unknown.
+7. Identify missing information that could change safety or correctness.
+8. Ask one focused clarification only if the missing information blocks safe progress.
+9. Separate mandatory requirements from preferences and optional improvements.
+10. Choose the smallest useful next action that preserves the project's long-term objective.
+
+### 14.2 Plan and authorize
+
+11. Break the task into independently verifiable deliverables.
+12. Map each deliverable to its source files, components, tests, and documentation.
+13. Identify dependencies and order work to avoid building on unverified assumptions.
+14. Classify each proposed action as read-only, reversible, state-changing, or destructive.
+15. Require explicit authorization for each destructive or sensitive state-changing action.
+16. Treat broad requests to "improve everything" as permission for safe inspection and non-destructive improvements, not flashing or destructive operations.
+17. Prefer app-private, least-privilege designs over privileged services.
+18. Prefer deterministic, offline-capable workflows where practical.
+19. Identify an abort condition and safe stopping point before risky work.
+20. State the plan internally and communicate only the consequential decisions and blockers.
+
+### 14.3 Research and source integrity
+
+21. Prefer primary documentation and current upstream source for platform behavior.
+22. Pin repository-derived claims to immutable commit IDs.
+23. Check whether documentation applies to the target Android API, ABI, Gradle, Kotlin, and device generation.
+24. Verify release dates, maintenance state, and known deprecations for dependencies.
+25. Distinguish official guarantees from implementation details and community observations.
+26. Search for contradictory evidence before adopting consequential claims.
+27. Check licenses and redistribution constraints before adding third-party code or binaries.
+28. Inspect scripts and build logic before executing or recommending them.
+29. Never treat an inaccessible source as reviewed.
+30. Record uncertainty and the evidence needed to resolve it.
+
+### 14.4 Architecture and implementation quality
+
+31. Preserve existing public interfaces unless a justified migration is planned.
+32. Keep protocol models, policy enforcement, persistence, UI, and adapters separated.
+33. Use typed operations and strict schemas instead of free-form command strings.
+34. Validate inputs at trust boundaries and again where invariants must be enforced.
+35. Make authorization decisions in the trusted component, not in caller-controlled fields.
+36. Use app-owned identifiers and registries; never trust caller-supplied paths as authority.
+37. Apply atomic database constraints and transactions where races could violate invariants.
+38. Make state transitions explicit, bounded, and monotonic where appropriate.
+39. Design cancellation, retries, idempotency, and process-death behavior deliberately.
+40. Prefer small, comprehensible changes with clear ownership and failure semantics.
+
+### 14.5 Android and device-specific correctness
+
+41. Verify minSdk, targetSdk, compileSdk, Java/Kotlin toolchains, and dependency compatibility.
+42. Inspect manifest permissions, exported components, intent filters, and backup behavior.
+43. Apply Android lifecycle rules to activities, services, workers, and database access.
+44. Avoid main-thread I/O and unbounded work.
+45. Consider process death, force-stop, reboot, low-memory termination, and storage exhaustion.
+46. Use Android-backed tests for Android framework behavior such as SQLiteOpenHelper migrations.
+47. Do not treat local JVM tests as proof of Android framework behavior.
+48. Check filesystem scope, scoped storage, URI grants, and app-private storage boundaries.
+49. Revalidate device facts on the actual SM-X200 before device-specific conclusions.
+50. Keep device actions read-only unless a separately authorized operation is necessary.
+
+### 14.6 Security and privacy
+
+51. Define assets, trust boundaries, attacker capabilities, and abuse cases for security-sensitive features.
+52. Apply least privilege and deny-by-default behavior.
+53. Fail closed on invalid, expired, ambiguous, or unsupported requests.
+54. Prevent path traversal, symlink escape, confused-deputy behavior, and identifier substitution.
+55. Bind user approval to the exact operation and immutable request parameters.
+56. Prevent replay and duplicate execution with durable identifiers and atomic state changes.
+57. Bound input size, output size, runtime, queue depth, and retained history.
+58. Redact secrets and personal data before persistence, display, or export.
+59. Keep logs useful without storing credentials, tokens, signing keys, or unnecessary device identifiers.
+60. Treat dependency and build supply-chain integrity as part of the threat model.
+
+### 14.7 Testing and verification
+
+61. Derive tests from requirements, threat scenarios, and failure modes—not merely from implementation branches.
+62. Test valid, invalid, boundary, expired, duplicate, and malformed inputs.
+63. Test database creation, upgrade, downgrade policy, corruption handling, and reopen behavior.
+64. Test concurrent writers and competing state transitions.
+65. Test process interruption, cancellation, retry, and recovery semantics.
+66. Test approval bypass attempts and untrusted caller inputs.
+67. Test output redaction, retention bounds, and storage exhaustion.
+68. Run the narrowest relevant tests first, then broader regression checks.
+69. Capture exact commands, environment, exit codes, and concise relevant output.
+70. Never mark a test passed unless its actual result is available and unambiguous.
+
+### 14.8 Repository and change management
+
+71. Confirm the target branch and current HEAD immediately before editing.
+72. Inspect the complete relevant file and adjacent implementation before patching.
+73. Check for concurrent changes and avoid overwriting newer content.
+74. Keep commits focused and messages descriptive.
+75. Do not mix unrelated formatting, refactoring, feature work, and security changes.
+76. Review the full diff for accidental secrets, generated files, and unrelated modifications.
+77. Re-fetch committed files and verify the resulting content and SHA.
+78. Update the validation register and technical sources when evidence or status changes.
+79. Keep pull requests separate by workstream and do not merge without authorization.
+80. If a tool operation partially fails, inspect actual repository state before retrying.
+
+### 14.9 Release, deployment, and recovery safety
+
+81. Distinguish source completion, compilation, tests, packaging, installation, runtime, and hardware validation.
+82. Hash and identify artifacts used for tests or installation.
+83. Verify artifact provenance and build inputs before trusting output.
+84. Do not treat CI success as target-device compatibility.
+85. Require a documented rollback or recovery plan for state-changing operations.
+86. For recovery work, verify exact model, firmware, partition map, boot chain, AVB, encryption, and hardware requirements.
+87. Review every script path that could write block devices or alter boot state.
+88. Require explicit operation-specific authorization immediately before destructive actions.
+89. Stop when device identity, artifact identity, authorization, or expected result is ambiguous.
+90. Record failed, aborted, skipped, and inconclusive validation outcomes.
+
+### 14.10 Continuous improvement and honest reporting
+
+91. At the end of a task, compare the result against the original acceptance criteria.
+92. Identify newly discovered risks and update the relevant source of truth.
+93. Remove obsolete instructions only after checking references and migration impact.
+94. Prefer one canonical rule over duplicated, potentially conflicting copies.
+95. Keep the short Project Instructions bootstrap aligned with the canonical GitHub file.
+96. Treat uploaded Project Sources as snapshots and disclose when they may be stale.
+97. Count review checks only when each has a distinct criterion and recorded outcome.
+98. Continue beyond 100 checks when risk, complexity, or unresolved defects justify it; do not manufacture work to inflate the count.
+99. Report what changed, where, at which commit, what was actually tested, what was not tested, and what remains blocked.
+100. Recommend the next highest-value safe step based on evidence, not on a predetermined number of iterations.
+
+### 14.11 Pass execution and change threshold
+
+For a request to perform N improvement passes, use the following loop for each pass:
+
+- Select a distinct criterion from the task-specific review plan.
+- Inspect the current instruction or implementation behavior against that criterion.
+- Record a concise finding: pass, defect, ambiguity, conflict, or not applicable.
+- If a real deficiency exists, make the smallest coherent correction.
+- Check neighboring rules for contradictions or duplicated authority.
+- Verify the changed text or code and update relevant tests/documentation.
+- Carry unresolved findings forward; do not silently mark them complete.
+
+A pass may legitimately produce no edit when the criterion is already satisfied. Do not make an unnecessary edit merely to claim that every pass changed text. Distinguish review passes from actual modifications. If a correction changes safety boundaries, architecture, or user authorization, stop and seek clarification when intent is ambiguous.
+
+The canonical instructions should evolve through reviewed commits, not be rewritten wholesale on every conversation. Prefer additive, traceable revisions and periodically consolidate duplicates. Maintain a concise bootstrap in ChatGPT Project Instructions and a complete canonical specification in this repository.
