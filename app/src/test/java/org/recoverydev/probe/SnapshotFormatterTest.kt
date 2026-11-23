@@ -17,6 +17,9 @@ class SnapshotFormatterTest {
         assertEquals("1 B", SnapshotFormatter.bytes(1L))
         assertEquals("1.00 KiB", SnapshotFormatter.bytes(1024L))
         assertEquals("1.00 MiB", SnapshotFormatter.bytes(1024L * 1024L))
+        assertEquals("1.00 TiB", SnapshotFormatter.bytes(1024L * 1024L * 1024L * 1024L))
+        assertEquals("1.00 PiB", SnapshotFormatter.bytes(1L shl 50))
+        assertEquals("8.00 EiB", SnapshotFormatter.bytes(Long.MAX_VALUE))
         assertEquals("Unavailable", SnapshotFormatter.bytes(null))
         assertEquals("Unavailable", SnapshotFormatter.bytes(-1L))
     }
