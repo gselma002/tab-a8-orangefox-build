@@ -21,10 +21,15 @@ Use evidence in this order, while considering both authority and freshness:
 
 A newer source does not automatically outrank a more authoritative source. Mark conflicts explicitly and resolve them using direct evidence.
 
+## Recommended ChatGPT Project source
+
+**Upload [chatgpt-live-source.md](chatgpt-live-source.md) as the single primary Project Source.** It is a stable pointer to the maintained GitHub documents and tells future project work to retrieve current repository content on demand when GitHub access is connected.
+
+This pointer is not a live-sync mechanism: the uploaded file itself does not change when GitHub changes. GitHub's ChatGPT connection can retrieve permitted repository content on demand, but it does not create a continuously synchronized Project index. If live retrieval is unavailable in a chat, disclose that limitation and use the linked files only after retrieving them, or refresh uploaded snapshots manually.
 
 ## Curated Project Sources
 
-These five maintained documents are intended to be added to ChatGPT Project Sources (or uploaded as files if the project UI does not support linking repository files):
+The following five detailed documents remain the maintained engineering reference set. They can be uploaded as additional Project Sources when convenient, but the live pointer above is the preferred single upload:
 
 1. [Project Sources Master Index](project-sources.md) — navigation, source authority, project boundaries, and maintenance rules.
 2. [Device Baseline](source-device-baseline.md) — historical device facts, provenance warnings, and a safe revalidation template.
@@ -32,21 +37,9 @@ These five maintained documents are intended to be added to ChatGPT Project Sour
 4. [Implementation and Validation Register](source-validation-register.md) — evidence-based status of code, tests, builds, installation, and hardware verification.
 5. [Technical Research and Compatibility](source-technical-research.md) — Android/Termux/Shizuku constraints, upstream references, and recovery compatibility gates.
 
-The five documents are maintained in the repository under `docs/`. If the ChatGPT project accepts only file uploads rather than repository links, download these five Markdown files and upload them. Keep the repository versions authoritative and refresh uploaded copies after material changes. A URL in this index does not imply automatic synchronization.
+The five documents are maintained in the repository under `docs/`. Repository versions are authoritative. A URL in this index does not imply automatic synchronization.
 
 ## Repository navigation
-
-## Source governance and synchronization
-
-Each source document must carry its classification, scope, last-reviewed date, and evidence limitations. Record the exact commit SHA when a claim depends on repository code. Project Sources uploads are snapshots unless the ChatGPT product explicitly provides a supported live-link feature; do not assume GitHub changes synchronize into uploaded files.
-
-Review all five documents when any of these occur: firmware/Android update; repository architecture or PR change; new test/build/device evidence; security incident or newly identified threat; change in recovery source/branch; or a milestone transition. Prefer correcting the authoritative source first, then refresh the Project upload.
-
-Keep the collection small and non-duplicative. The master index should point to detailed sources rather than copying entire sections. Do not put secrets, raw personal device identifiers, access tokens, signing keys, or unredacted diagnostic output in Project Sources.
-
-## Conversation-history coverage and limits
-
-The engineering history document is a curated synthesis of project conversations available in the working context, not a complete export or verbatim archive of every account chat. Conversation titles alone do not establish relevance. Include a conversation only when its technical decisions, device evidence, commands, or constraints materially affect this project. Preserve uncertainty where the original command output or full transcript is unavailable. The user remains the authority for whether a conversation should be moved into the ChatGPT Project.
 
 - [README](../README.md) — current project scope and validation status.
 - [Architecture](architecture.md) — Android-first component boundaries and local-build feasibility.
@@ -55,6 +48,18 @@ The engineering history document is a curated synthesis of project conversations
 - [Local automation bridge](local-automation-bridge.md) — proposed local job broker; not a live ChatGPT-to-device connection.
 - [Engineering roadmap](roadmap.md) — milestones and acceptance criteria.
 - [Termux build path](termux-build-path.md) — candidate on-device app build setup; not yet proven on the SM-X200.
+
+## Source governance and synchronization
+
+Each source document must carry its classification, scope, last-reviewed date, and evidence limitations. Record the exact commit SHA when a claim depends on repository code. Project Sources uploads are snapshots unless the ChatGPT product explicitly provides a supported live-link feature; do not assume GitHub changes synchronize into uploaded files.
+
+Review all five documents when any of these occur: firmware/Android update; repository architecture or PR change; new test/build/device evidence; security incident or newly identified threat; change in recovery source/branch; or a milestone transition. Prefer correcting the authoritative source first, then refresh any uploaded detailed snapshots that are relied upon.
+
+Keep the collection small and non-duplicative. The master index should point to detailed sources rather than copying entire sections. Do not put secrets, raw personal device identifiers, access tokens, signing keys, or unredacted diagnostic output in Project Sources.
+
+## Conversation-history coverage and limits
+
+The engineering history document is a curated synthesis of project conversations available in the working context, not a complete export or verbatim archive of every account chat. Conversation titles alone do not establish relevance. Include a conversation only when its technical decisions, device evidence, commands, or constraints materially affect this project. Preserve uncertainty where the original command output or full transcript is unavailable. The user remains the authority for whether a conversation should be moved into the ChatGPT Project.
 
 ## Pull-request boundaries
 
