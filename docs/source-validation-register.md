@@ -49,6 +49,14 @@ These do not establish:
 
 ## Required next validation work
 
+## Evidence provenance and result handling
+
+This register combines repository inspection and previously reported smoke-test summaries. The older smoke tests are not all accompanied here by full raw logs, exact tool versions, or immutable harness source. Treat them as historical reported results until their evidence is recovered and attached. Do not cite them as independently reproducible CI or Android test results.
+
+For each new run, retain the command, working directory, exit code, tool versions, source commit, start/end time, and a concise redacted log excerpt. For device runs, include the exact firmware/build and app version. Hash distributable APKs and recovery images. Never include signing keys or private credentials.
+
+A failed, skipped, flaky, or inconclusive test must be recorded as such; do not convert it to "passed" by rerunning until green without retaining the failure history. Separate a test's result from the coverage it provides.
+
 1. Inspect the current branch and exact Kotlin/Gradle configuration.
 2. Add Android-backed tests for database creation, duplicate request IDs, artifact/workspace persistence, invalid states, timestamp ordering, expiry, and migration from a real v1 schema.
 3. Test migration rollback and preservation of existing records.
